@@ -167,8 +167,8 @@ last_trade = last_trading_day(datetime.date.today())
 # This is to avoid issues if yesterday was an expiry day.
 first_call = (last_trade + datetime.timedelta(days=31)).strftime('%Y%m')
 
-# prod_id='48364' # BAYE European call
-prod_id='55024' # Siemens European call
+prod_id='48364' # BAYE European call
+#prod_id='55024' # Siemens European call
 
 # According to ycharts.com, this is the rate in Germany since May 2022.
 r0 = 0.95e-2
