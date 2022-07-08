@@ -4,7 +4,7 @@
 Created on Wed Jul  6 15:30:32 2022
 
 Given Eurex product id for a CALL option and risk-free interest rate,
-this code downloads all available option data from Eurex, computes
+this code scrapes all available option data from Eurex, computes
 the implied volatility from Black-Scholes model, using Newton-Raphson
 method and produces some plots
 
@@ -51,19 +51,26 @@ def implied_volatility(V, E, T, S, r, tol):
     N_it = 1000 # maximum iterations
     
     for i in range(N_it):
+        # Check that V >= S - E x discount factor
+        # (Option value greater than intrinsic value, see Wilmott Q6.3.b)
+        int_val = S - E * np.exp(-r*T)
+        if int_val > V:
+            print("Market value below the intrinsic value.",\
+                  "V={}, E={}, T={}.".format(V, E, T))
+            imp_sig = np.nan
+            break
+        
         V_bs = black_scholes(E, T, S, r, sig)
         dV = V_bs - V
+        if abs(dV) < tol: # are we already close in the first iteration?
+            imp_sig = sig
+            break
         dVds = vega(E, T, S, r, sig)
-        # Stop if vega is zero
         if np.abs(dVds) < 1.e-15:
-            print('Zero vega at V={}, E={}, T={}'.format(V, E, T))
-            # ..but keep the point if we're close to the market value
-            if abs(dV) < tol:
-                imp_sig = sig
-                break
-            else:
-                imp_sig = np.nan
-                break
+           # If there are extrema in the value, cannot calculate vol
+           print('Zero vega at V={}, E={}, T={}'.format(V, E, T))
+           imp_sig = np.nan
+           break
         ds = dV / dVds
         sig -= ds
         V_new = black_scholes(E, T, S, r, sig)
@@ -73,12 +80,15 @@ def implied_volatility(V, E, T, S, r, tol):
             break
     # Drop the point if no convergence at the end
     if i == N_it -1:
-        print('Maximum iterations reached')
+        print('Maximum iterations reached at V={}, E={}, T={}'
+              .format(V, E, T))
         imp_sig = np.nan
-    # Drop negative sigma values
+    # If somehow I missed something and we have negative vol, drop it
     if imp_sig < 0:
         imp_sig = np.nan
         print('Negative vol at V={}, E={}, T={}'.format(V, E, T))
+
+
     return imp_sig
 
 
@@ -167,11 +177,12 @@ last_trade = last_trading_day(datetime.date.today())
 # This is to avoid issues if yesterday was an expiry day.
 first_call = (last_trade + datetime.timedelta(days=31)).strftime('%Y%m')
 
-prod_id='48364' # BAYE European call
-#prod_id='55024' # Siemens European call
-
-# According to ycharts.com, this is the rate in Germany since May 2022.
-r0 = 0.95e-2
+# prod_id = '48364' # BAYE European option
+# prod_id = '55024' # Siemens European option
+prod_id = '50318' # Airbus option
+# Euro-zone day-to-day interest rate
+# https://ycharts.com/indicators/eurozone_daytoday_interest_rate
+r0 = -0.49e-2
 tolerance = 1.e-5
 
 
@@ -214,8 +225,10 @@ option_data['Value_inf'] = option_data.apply(lambda row:
                                                  row["Vol"]), 
                                              axis=1)
 # Some of the market values are incompatible with BS. I remove those
-print('{:3d}% of values dropped'.
-      format(int(option_data['Vol'].isna().sum()/len(option_data)*100))
+N_dropped = int(option_data['Vol'].isna().sum())
+N_tot = len(option_data)
+print('{} of {} values dropped ({:.1f}%)'.
+      format(N_dropped, N_tot, N_dropped/N_tot*100)
       ,flush=True)
 option_data = option_data.dropna(subset=['Vol'])
 
