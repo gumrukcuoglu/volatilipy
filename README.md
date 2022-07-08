@@ -1,7 +1,7 @@
 # volatilipy
-volatility codes
 
-This repo contains some small codes I've written (and continuing to write) while studying quantitative finance. They are written in python3 (hence the anti-English repo title). They do not contain any ground-breaking methods or techniques, more of an opportunity for me to try out the theoretical stuff I'm learning.
+This repo contains some small codes I've written (and continuing to write) while studying quantitative finance. They are written in python3 (hence the repo title). They do not contain any ground-breaking methods or techniques by any sense of the word, more of an opportunity for me to try out the theoretical stuff I'm learning while reading Wilmott's Quantitative Finance.
 
 So far, the repo contains the following:
-* *imp_vol*  which is a self-contained code that scrapes eurex.com for options data for a chosen product and calculates the volatility implied by the Black-Scholes model. The code uses the ubiquitous Netwon-Raphson method for iteration. In the end, it produces some cute plots showing the dependence of the implied volatility on the strike and expiry.
+* *imp_vol*  is a self-contained code that scrapes eurex.com for options data for a chosen product and calculates the volatility implied by the Black-Scholes model. The code uses the ubiquitous Netwon-Raphson method for iteration. In the end, it produces some cute plots showing the dependence of the implied volatility on the strike and expiry.
+* *hist_vol*  imports historical stock data of four assets for the given time period from Yahoo! Finance and compares different methods to estimate actual historical (realised) volatility. First, a time-dependent volatility is assumed and realised volatility is estimated for a period of 1 year using close-to-close, Parkinson (1980), Garman-Klass (1980) and Rogers-Satchell (1991) estimators, then compared in a plot. In the second part, volatility is assumed to be constant and realised volatility is estimated by adopting a moving-window and an exponentially weighted moving average estimators. The results are compared in a plot.
